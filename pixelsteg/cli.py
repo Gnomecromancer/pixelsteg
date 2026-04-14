@@ -1,6 +1,7 @@
 """CLI entry point for pixelsteg."""
 
 import argparse
+import getpass
 import sys
 from pathlib import Path
 
@@ -26,7 +27,12 @@ def cmd_hide(args: argparse.Namespace) -> int:
         return 1
 
     payload = payload_path.read_bytes()
-    password = args.password.encode() if args.password else b""
+    if args.password is True:
+        password = getpass.getpass("Password: ").encode()
+    elif args.password:
+        password = args.password.encode()
+    else:
+        password = b""
 
     try:
         img = Image.open(img_path)
@@ -61,7 +67,12 @@ def cmd_reveal(args: argparse.Namespace) -> int:
         print(f"error: image not found: {img_path}", file=sys.stderr)
         return 1
 
-    password = args.password.encode() if args.password else b""
+    if args.password is True:
+        password = getpass.getpass("Password: ").encode()
+    elif args.password:
+        password = args.password.encode()
+    else:
+        password = b""
 
     try:
         img = Image.open(img_path)
@@ -130,7 +141,11 @@ def main() -> int:
         default=1,
         help="Bits per channel (1=imperceptible, 2=double capacity; default: 1)",
     )
-    p_hide.add_argument("--password", "-p", help="XOR encrypt payload with this key")
+    p_hide.add_argument(
+        "--password", "-p",
+        nargs="?", const=True, default=None,
+        help="XOR encrypt payload (use -p alone to prompt, or -p KEY to pass inline)",
+    )
 
     # reveal
     p_reveal = sub.add_parser("reveal", help="Extract hidden data from a PNG image")
@@ -143,7 +158,11 @@ def main() -> int:
         default=1,
         help="Bits per channel used when hiding (default: 1)",
     )
-    p_reveal.add_argument("--password", "-p", help="Decryption key (must match hide)")
+    p_reveal.add_argument(
+        "--password", "-p",
+        nargs="?", const=True, default=None,
+        help="Decryption key (use -p alone to prompt, or -p KEY to pass inline)",
+    )
 
     # capacity
     p_cap = sub.add_parser("capacity", help="Show how much data an image can hold")

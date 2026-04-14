@@ -1,0 +1,2 @@
+[console_scripts]
+steg = pixelsteg.cli:main
